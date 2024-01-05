@@ -1,4 +1,4 @@
-# Phone REST-ish API
+# Phonebook REST-ish API
 
 Exercise for the Full Stack Open course.
 
