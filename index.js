@@ -3,6 +3,7 @@ const morgan = require("morgan");
 
 const app = express();
 
+app.use(express.static("dist"));
 app.use(express.json());
 
 morgan.token("postData", (request, response, next) =>
@@ -112,8 +113,6 @@ app.put("/api/persons/:id", (request, response) => {
   const id = parseInt(request.params.id);
 
   const person = persons.find((p) => p.id === id);
-
-  console.log(id, person, body);
 
   if (!person) {
     return response.status(404).send();
