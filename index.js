@@ -102,6 +102,33 @@ app.get("/api/persons/:id", (request, response) => {
   response.json(person);
 });
 
+app.put("/api/persons/:id", (request, response) => {
+  const body = request.body;
+
+  if (!body.number) {
+    return sendBadRequestError(response, "Number is missing.");
+  }
+
+  const id = parseInt(request.params.id);
+
+  const person = persons.find((p) => p.id === id);
+
+  console.log(id, person, body);
+
+  if (!person) {
+    return response.status(404).send();
+  }
+
+  const updatedPerson = {
+    ...person,
+    number: body.number,
+  };
+
+  persons = persons.map((p) => (p.id !== id ? p : updatedPerson));
+
+  response.status(201).json(updatedPerson);
+});
+
 app.delete("/api/persons/:id", (request, response) => {
   const id = parseInt(request.params.id);
 
@@ -110,5 +137,5 @@ app.delete("/api/persons/:id", (request, response) => {
   response.status(204).end();
 });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running at port ${PORT}.`));
