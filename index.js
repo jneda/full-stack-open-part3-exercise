@@ -1,7 +1,27 @@
 const express = require("express");
+const morgan = require("morgan");
+
 const app = express();
 
 app.use(express.json());
+
+morgan.token("postData", (request, response, next) =>
+  JSON.stringify(request.body)
+);
+
+const morganFormat = (tokens, request, response) =>
+  [
+    tokens.method(request, response),
+    tokens.url(request, response),
+    tokens.status(request, response),
+    tokens.res(request, response, "content-length"),
+    "-",
+    tokens["response-time"](request, response),
+    "ms",
+    request.method === "POST" ? tokens.postData(request, response) : "",
+  ].join(" ");
+
+app.use(morgan(morganFormat));
 
 let persons = [
   {
