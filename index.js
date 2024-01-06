@@ -1,3 +1,7 @@
+require("dotenv").config();
+
+const Person = require("./models/person");
+
 const express = require("express");
 const morgan = require("morgan");
 
@@ -48,12 +52,16 @@ let persons = [
 ];
 
 app.get("/info", (request, response) => {
-  let markup = `<p>Phonebook has info for ${persons.length} people.</p>`;
-  markup = markup.concat(`<p>${new Date().toString()}</p>`);
-  response.send(markup);
+  Person.find({}).then((persons) => {
+    let markup = `<p>Phonebook has info for ${persons.length} people.</p>`;
+    markup = markup.concat(`<p>${new Date().toString()}</p>`);
+    response.send(markup);
+  });
 });
 
-app.get("/api/persons", (request, response) => response.json(persons));
+app.get("/api/persons", (request, response) => {
+  Person.find({}).then((persons) => response.json(persons));
+});
 
 const generateId = () => Math.floor(Math.random() * 1000 * 1000 * 1000);
 
@@ -75,20 +83,19 @@ app.post("/api/persons", (request, response) => {
 
   const { name, number } = body;
 
-  const doesNameExist = persons.some((p) => p.name === name);
-  if (doesNameExist) {
-    return sendBadRequestError(response, "Name must be unique.");
-  }
+  // const doesNameExist = persons.some((p) => p.name === name);
+  // if (doesNameExist) {
+  //   return sendBadRequestError(response, "Name must be unique.");
+  // }
 
-  const newPerson = {
+  const newPerson = new Person({
     name,
     number,
-    id: generateId(),
-  };
+  });
 
-  persons = persons.concat(newPerson);
-
-  response.status(201).json(newPerson);
+  newPerson
+    .save()
+    .then((savedPerson) => response.status(201).json(savedPerson));
 });
 
 app.get("/api/persons/:id", (request, response) => {
