@@ -19,6 +19,14 @@ const App = () => {
     personService.getAll().then((persons) => setPersons(persons));
   }, []);
 
+  function displayNotification(message, type) {
+    let setMessage = type === "success" ? setSuccessMessage : setErrorMessage;
+    setMessage(message);
+    setTimeout(() => {
+      setMessage(null);
+    }, 5000);
+  }
+
   const addPerson = (event) => {
     event.preventDefault();
 
@@ -33,10 +41,16 @@ const App = () => {
       return updatePerson(existingPerson, newPerson);
     }
 
-    personService.create(newPerson).then((createdPerson) => {
-      setPersons(persons.concat(createdPerson));
-      displayNotification(`Added ${newPerson.name}`, "success");
-    });
+    personService
+      .create(newPerson)
+      .then((createdPerson) => {
+        setPersons(persons.concat(createdPerson));
+        displayNotification(`Added ${newPerson.name}`, "success");
+      })
+      .catch((error) => {
+        const errorMessage = error.response.data.error;
+        displayNotification(errorMessage, "error");
+      });
   };
 
   const updatePerson = (existingPerson, newPerson) => {
@@ -55,21 +69,16 @@ const App = () => {
         displayNotification(`Updated ${newPerson.name}`, "success");
       })
       .catch((error) => {
-        displayNotification(
-          `Information about ${newPerson.name} has already been removed from server`,
-          "error"
-        );
-        setPersons(persons.filter((p) => p.id !== existingPerson.id));
+        const errorMessage = error.response.data.error;
+        displayNotification(errorMessage, "error");
+
+        // if person info was already removed from server,
+        // update persons state
+        if (error.response.status === 404) {
+          setPersons(persons.filter((p) => p.id !== existingPerson.id));
+        }
       });
   };
-
-  function displayNotification(message, type) {
-    let setMessage = type === "success" ? setSuccessMessage : setErrorMessage;
-    setMessage(message);
-    setTimeout(() => {
-      setMessage(null);
-    }, 5000);
-  }
 
   const handleNameChange = (event) => setNewName(event.target.value);
 
