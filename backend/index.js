@@ -51,35 +51,32 @@ const throwBadRequestError = (errorMessage) => {
 };
 
 app.post("/api/persons", (request, response, next) => {
-  try {
-    const body = request.body;
+  const body = request.body;
 
-    if (!body.name) {
-      return throwBadRequestError("Name is missing.");
-    }
+  // if (!body.name) {
+  //   return throwBadRequestError("Name is missing.");
+  // }
 
-    if (!body.number) {
-      return throwBadRequestError("Number is missing.");
-    }
+  // if (!body.number) {
+  //   return throwBadRequestError("Number is missing.");
+  // }
 
-    const { name, number } = body;
+  const { name, number } = body;
 
-    // const doesNameExist = persons.some((p) => p.name === name);
-    // if (doesNameExist) {
-    //   return sendBadRequestError(response, "Name must be unique.");
-    // }
+  // const doesNameExist = persons.some((p) => p.name === name);
+  // if (doesNameExist) {
+  //   return sendBadRequestError(response, "Name must be unique.");
+  // }
 
-    const newPerson = new Person({
-      name,
-      number,
-    });
+  const newPerson = new Person({
+    name,
+    number,
+  });
 
-    newPerson
-      .save()
-      .then((savedPerson) => response.status(201).json(savedPerson));
-  } catch (error) {
-    next(error);
-  }
+  newPerson
+    .save()
+    .then((savedPerson) => response.status(201).json(savedPerson))
+    .catch((error) => next(error));
 });
 
 app.get("/api/persons/:id", (request, response) => {
@@ -138,6 +135,10 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === "BadRequest") {
     return response.status(400).send({ error: error.message });
+  }
+
+  if (error.name === "ValidationError") {
+    return response.status(400).json({ error: error.message });
   }
 
   next(error);
