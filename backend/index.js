@@ -44,29 +44,10 @@ app.get("/api/persons", (request, response) => {
   Person.find({}).then((persons) => response.json(persons));
 });
 
-const throwBadRequestError = (errorMessage) => {
-  const error = new Error(errorMessage);
-  error.name = "BadRequest";
-  throw error;
-};
-
 app.post("/api/persons", (request, response, next) => {
   const body = request.body;
-
-  // if (!body.name) {
-  //   return throwBadRequestError("Name is missing.");
-  // }
-
-  // if (!body.number) {
-  //   return throwBadRequestError("Number is missing.");
-  // }
-
+  
   const { name, number } = body;
-
-  // const doesNameExist = persons.some((p) => p.name === name);
-  // if (doesNameExist) {
-  //   return sendBadRequestError(response, "Name must be unique.");
-  // }
 
   const newPerson = new Person({
     name,
@@ -92,23 +73,35 @@ app.get("/api/persons/:id", (request, response) => {
 app.put("/api/persons/:id", (request, response, next) => {
   const body = request.body;
 
-  if (!body.name) {
-    return throwBadRequestError("Name is missing.");
-  }
-
   if (!body.number) {
     return throwBadRequestError("Number is missing.");
   }
 
   const { name, number } = body;
 
-  const updatedPerson = {
-    name,
-    number,
-  };
+  Person.findByIdAndUpdate(
+    request.params.id,
+    {
+      name,
+      number,
+    },
+    {
+      new: true,
+      runValidators: true,
+      context: "query",
+    }
+  )
+    .then((updatedPerson) => {
+      if (!updatedPerson) {
+        const error = new Error(
+          `Information about ${name} has already been removed from server.`
+        );
+        error.name = "PersonNotFoundError";
+        return next(error);
+      }
 
-  Person.findByIdAndUpdate(request.params.id, updatedPerson, { new: true })
-    .then((updatedPerson) => response.status(201).json(updatedPerson))
+      response.status(201).json(updatedPerson);
+    })
     .catch((error) => next(error));
 });
 
@@ -139,6 +132,10 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === "ValidationError") {
     return response.status(400).json({ error: error.message });
+  }
+
+  if (error.name === "PersonNotFoundError") {
+    return response.status(404).send({ error: error.message });
   }
 
   next(error);
