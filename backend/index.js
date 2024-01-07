@@ -12,9 +12,7 @@ app.use(express.json());
 
 // morgan logger config
 
-morgan.token("postData", (request, response, next) =>
-  JSON.stringify(request.body)
-);
+morgan.token("postData", (request) => JSON.stringify(request.body));
 
 const morganFormat = (tokens, request, response) =>
   [
@@ -46,7 +44,7 @@ app.get("/api/persons", (request, response) => {
 
 app.post("/api/persons", (request, response, next) => {
   const body = request.body;
-  
+
   const { name, number } = body;
 
   const newPerson = new Person({
@@ -72,10 +70,6 @@ app.get("/api/persons/:id", (request, response) => {
 
 app.put("/api/persons/:id", (request, response, next) => {
   const body = request.body;
-
-  if (!body.number) {
-    return throwBadRequestError("Number is missing.");
-  }
 
   const { name, number } = body;
 
@@ -107,7 +101,7 @@ app.put("/api/persons/:id", (request, response, next) => {
 
 app.delete("/api/persons/:id", (request, response, next) => {
   Person.findByIdAndDelete(request.params.id)
-    .then((result) => response.status(204).end())
+    .then(() => response.status(204).end())
     .catch((error) => next(error));
 });
 
